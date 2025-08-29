@@ -1,5 +1,6 @@
 const { Telegraf } = require('telegraf');
 const axios = require('axios');
+require('dotenv').config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
@@ -20,7 +21,8 @@ bot.on('text', async (ctx) => {
   const userMessage = ctx.message.text;
   
   try {
-    // Отправляем запрос в DeepSeek API
+    console.log('📨 Отправка запроса к DeepSeek API...');
+    
     const response = await axios.post(
       DEEPSEEK_API_URL,
       {
@@ -32,16 +34,22 @@ bot.on('text', async (ctx) => {
         headers: {
           'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 10000 // 10 секунд таймаут
       }
     );
 
-    // Отправляем ответ пользователю
+    console.log('✅ Ответ от DeepSeek получен');
     const aiResponse = response.data.choices[0].message.content;
     await ctx.reply(aiResponse);
     
   } catch (error) {
-    console.error('Ошибка:', error.response?.data || error.message);
+    console.error('❌ Полная ошибка:', error);
+    console.error('🔍 Код ошибки:', error.code);
+    console.error('🔍 URL запроса:', error.config?.url);
+    console.error('🔍 Статус ответа:', error.response?.status);
+    console.error('🔍 Данные ответа:', error.response?.data);
+    
     ctx.reply('⚠️ Произошла ошибка при обработке запроса. Попробуйте позже.');
   }
 });
